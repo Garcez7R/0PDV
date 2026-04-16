@@ -1,4 +1,22 @@
 export type PaymentMethod = "cash" | "debit" | "credit";
+export type UserRole = "operator" | "manager";
+
+export type AuthUser = {
+  id: string;
+  name: string;
+  role: UserRole;
+};
+
+export type AuditAction =
+  | "auth.login"
+  | "auth.logout"
+  | "product.create"
+  | "product.update"
+  | "product.delete"
+  | "stock.adjust"
+  | "sale.create"
+  | "settings.update"
+  | "sync.run";
 
 export type Product = {
   id: string;
@@ -10,6 +28,7 @@ export type Product = {
   stockQty: number;
   minStockQty: number;
   updatedAt: string;
+  updatedBy: AuthUser;
 };
 
 export type SaleItem = {
@@ -27,6 +46,7 @@ export type Sale = {
   paymentMethod: PaymentMethod;
   createdAt: string;
   items: SaleItem[];
+  createdBy: AuthUser;
 };
 
 export type StockAdjustment = {
@@ -35,6 +55,7 @@ export type StockAdjustment = {
   delta: number;
   reason: string;
   createdAt: string;
+  createdBy: AuthUser;
 };
 
 export type SyncOperation<TPayload = unknown> = {
@@ -65,9 +86,22 @@ export type ScannerScan = {
   createdAt: string;
 };
 
+export type AuditEntry = {
+  id: string;
+  action: AuditAction;
+  entityId?: string;
+  actor: AuthUser;
+  details: string;
+  createdAt: string;
+};
+
 export type AppSettings = {
   id: "app-settings";
   storeName: string;
   defaultMinStockQty: number;
   lastSyncAt: string | null;
+  operatorName: string;
+  operatorPin: string;
+  managerName: string;
+  managerPin: string;
 };

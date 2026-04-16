@@ -7,7 +7,8 @@ import type { Product } from "../lib/types";
 import { formatDate } from "../lib/utils";
 
 export function EstoquePage() {
-  const { products, adjustments, adjustStock } = useAppState();
+  const { products, adjustments, adjustStock, currentUser } = useAppState();
+  const isManager = currentUser?.role === "manager";
   const [query, setQuery] = useState("");
   const [selectedProductId, setSelectedProductId] = useState(products[0]?.id ?? "");
   const [delta, setDelta] = useState("1");
@@ -113,12 +114,18 @@ export function EstoquePage() {
 
         <SectionCard title="Ajustar estoque" description="Use valores positivos para entrada e negativos para saída.">
           <form className="grid gap-4" onSubmit={handleAdjustment}>
+            {!isManager ? (
+              <div className="rounded-2xl bg-brand-50 p-4 text-sm text-brand-900">
+                Apenas usuários com perfil de gerente podem lançar ajustes de estoque.
+              </div>
+            ) : null}
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Produto
               <select
                 className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3"
                 value={selectedProduct?.id ?? ""}
                 onChange={(event) => setSelectedProductId(event.target.value)}
+                disabled={!isManager}
               >
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
@@ -129,11 +136,11 @@ export function EstoquePage() {
             </label>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Quantidade a ajustar
-              <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" step="1" value={delta} onChange={(event) => setDelta(event.target.value)} required />
+              <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" step="1" value={delta} onChange={(event) => setDelta(event.target.value)} required disabled={!isManager} />
             </label>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Motivo
-              <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={reason} onChange={(event) => setReason(event.target.value)} required />
+              <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={reason} onChange={(event) => setReason(event.target.value)} required disabled={!isManager} />
             </label>
             {selectedProduct ? (
               <div className="rounded-2xl bg-canvas p-4 text-sm text-slate-600">
@@ -145,7 +152,7 @@ export function EstoquePage() {
                 </p>
               </div>
             ) : null}
-            <button className="rounded-2xl bg-accent px-4 py-3 font-semibold text-brand-900" type="submit">
+            <button className="rounded-2xl bg-accent px-4 py-3 font-semibold text-brand-900 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={!isManager}>
               Confirmar ajuste
             </button>
           </form>

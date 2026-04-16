@@ -1,6 +1,6 @@
 import { openDB, type DBSchema } from "idb";
 import { mockProducts, mockSales } from "../data/mock";
-import type { AppSettings, Product, Sale, StockAdjustment, SyncOperation } from "./types";
+import type { AppSettings, AuditEntry, AuthUser, Product, Sale, StockAdjustment, SyncOperation } from "./types";
 
 const DB_NAME = "nexa-pdv";
 const DB_VERSION = 1;
@@ -9,7 +9,11 @@ const defaultSettings: AppSettings = {
   id: "app-settings",
   storeName: "Mercadinho Nexa",
   defaultMinStockQty: 5,
-  lastSyncAt: null
+  lastSyncAt: null,
+  operatorName: "Operador",
+  operatorPin: "1234",
+  managerName: "Gerente",
+  managerPin: "4321"
 };
 
 interface NexaDatabase extends DBSchema {
@@ -29,6 +33,10 @@ interface NexaDatabase extends DBSchema {
     key: string;
     value: SyncOperation;
   };
+  auditLog: {
+    key: string;
+    value: AuditEntry;
+  };
   settings: {
     key: "app-settings";
     value: AppSettings;
@@ -41,6 +49,7 @@ const dbPromise = openDB<NexaDatabase>(DB_NAME, DB_VERSION, {
     db.createObjectStore("sales", { keyPath: "id" });
     db.createObjectStore("adjustments", { keyPath: "id" });
     db.createObjectStore("syncQueue", { keyPath: "id" });
+    db.createObjectStore("auditLog", { keyPath: "id" });
     db.createObjectStore("settings", { keyPath: "id" });
   }
 });
@@ -75,6 +84,17 @@ export async function listProducts() {
 export async function saveProduct(product: Product) {
   const db = await dbPromise;
   await db.put("products", product);
+}
+
+export async function appendAuditEntry(entry: AuditEntry) {
+  const db = await dbPromise;
+  await db.put("auditLog", entry);
+}
+
+export async function listAuditEntries() {
+  const db = await dbPromise;
+  const entries = await db.getAll("auditLog");
+  return entries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function replaceProducts(products: Product[]) {
@@ -193,4 +213,40 @@ export async function queueSync(operation: SyncOperation) {
 export async function clearSyncQueue() {
   const db = await dbPromise;
   await db.clear("syncQueue");
+}
+
+export function getUsersFromSettings(settings: AppSettings): AuthUser[] {
+  return [
+    {
+      id: "user-operator",
+      name: settings.operatorName,
+      role: "operator"
+    },
+    {
+      id: "user-manager",
+      name: settings.managerName,
+      role: "manager"
+    }
+  ];
+}
+
+export function authenticateWithPin(settings: AppSettings, pin: string): AuthUser | null {
+  const normalized = pin.trim();
+  if (normalized === settings.managerPin) {
+    return {
+      id: "user-manager",
+      name: settings.managerName,
+      role: "manager"
+    };
+  }
+
+  if (normalized === settings.operatorPin) {
+    return {
+      id: "user-operator",
+      name: settings.operatorName,
+      role: "operator"
+    };
+  }
+
+  return null;
 }

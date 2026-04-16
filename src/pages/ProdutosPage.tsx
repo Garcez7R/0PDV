@@ -41,7 +41,8 @@ function toFormState(product: Product): ProductFormState {
 }
 
 export function ProdutosPage() {
-  const { products, settings, saveProduct, deleteProduct } = useAppState();
+  const { products, settings, saveProduct, deleteProduct, currentUser } = useAppState();
+  const isManager = currentUser?.role === "manager";
   const [query, setQuery] = useState("");
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [form, setForm] = useState<ProductFormState>({
@@ -125,7 +126,7 @@ export function ProdutosPage() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
-            <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white" onClick={openForCreate}>
+            <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-60" onClick={openForCreate} disabled={!isManager}>
               <PackagePlus className="h-4 w-4" />
               Novo produto
             </button>
@@ -148,11 +149,11 @@ export function ProdutosPage() {
                 </div>
 
                 <div className="mt-4 flex gap-3">
-                  <button className="inline-flex items-center gap-2 rounded-2xl border border-brand-100 px-4 py-2 font-medium text-brand-900" onClick={() => openForEdit(product)}>
+                  <button className="inline-flex items-center gap-2 rounded-2xl border border-brand-100 px-4 py-2 font-medium text-brand-900 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => openForEdit(product)} disabled={!isManager}>
                     <Pencil className="h-4 w-4" />
                     Editar
                   </button>
-                  <button className="inline-flex items-center gap-2 rounded-2xl border border-red-100 px-4 py-2 font-medium text-red-500" onClick={() => handleDelete(product.id)}>
+                  <button className="inline-flex items-center gap-2 rounded-2xl border border-red-100 px-4 py-2 font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => handleDelete(product.id)} disabled={!isManager}>
                     <Trash2 className="h-4 w-4" />
                     Excluir
                   </button>
@@ -179,38 +180,43 @@ export function ProdutosPage() {
             ) : null}
           </div>
 
+          {!isManager ? (
+            <div className="mb-4 rounded-2xl bg-brand-50 p-4 text-sm text-brand-900">
+              Apenas usuários com perfil de gerente podem cadastrar, editar ou excluir produtos.
+            </div>
+          ) : null}
           <form className="grid gap-4" onSubmit={handleSubmit}>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Nome
-              <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
+              <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required disabled={!isManager} />
             </label>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Descrição
-              <textarea className="min-h-24 rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} required />
+              <textarea className="min-h-24 rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} required disabled={!isManager} />
             </label>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Código de barras
-              <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={form.barcode} onChange={(event) => setForm((current) => ({ ...current, barcode: event.target.value }))} required />
+              <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={form.barcode} onChange={(event) => setForm((current) => ({ ...current, barcode: event.target.value }))} required disabled={!isManager} />
             </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 Preço de custo
-                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="0.01" value={form.costPrice} onChange={(event) => setForm((current) => ({ ...current, costPrice: event.target.value }))} required />
+                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="0.01" value={form.costPrice} onChange={(event) => setForm((current) => ({ ...current, costPrice: event.target.value }))} required disabled={!isManager} />
               </label>
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 Preço de venda
-                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="0.01" value={form.salePrice} onChange={(event) => setForm((current) => ({ ...current, salePrice: event.target.value }))} required />
+                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="0.01" value={form.salePrice} onChange={(event) => setForm((current) => ({ ...current, salePrice: event.target.value }))} required disabled={!isManager} />
               </label>
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 Estoque atual
-                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="1" value={form.stockQty} onChange={(event) => setForm((current) => ({ ...current, stockQty: event.target.value }))} required />
+                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="1" value={form.stockQty} onChange={(event) => setForm((current) => ({ ...current, stockQty: event.target.value }))} required disabled={!isManager} />
               </label>
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 Estoque mínimo
-                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="1" value={form.minStockQty} onChange={(event) => setForm((current) => ({ ...current, minStockQty: event.target.value }))} required />
+                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="1" value={form.minStockQty} onChange={(event) => setForm((current) => ({ ...current, minStockQty: event.target.value }))} required disabled={!isManager} />
               </label>
             </div>
-            <button className="rounded-2xl bg-accent px-4 py-3 font-semibold text-brand-900" type="submit">
+            <button className="rounded-2xl bg-accent px-4 py-3 font-semibold text-brand-900 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={!isManager}>
               {form.id ? "Salvar alterações" : "Cadastrar produto"}
             </button>
           </form>

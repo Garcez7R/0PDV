@@ -1,4 +1,10 @@
-import type { Product, Sale } from "../lib/types";
+import type { AuthUser, Product, Sale } from "../lib/types";
+
+const seedManager: AuthUser = {
+  id: "user-manager-seed",
+  name: "Gerente",
+  role: "manager"
+};
 
 export const mockProducts: Product[] = [
   {
@@ -10,7 +16,8 @@ export const mockProducts: Product[] = [
     salePrice: 29.9,
     stockQty: 18,
     minStockQty: 6,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    updatedBy: seedManager
   },
   {
     id: "prod-feijao",
@@ -21,7 +28,8 @@ export const mockProducts: Product[] = [
     salePrice: 8.9,
     stockQty: 9,
     minStockQty: 8,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    updatedBy: seedManager
   },
   {
     id: "prod-cafe",
@@ -32,7 +40,8 @@ export const mockProducts: Product[] = [
     salePrice: 15.9,
     stockQty: 22,
     minStockQty: 7,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    updatedBy: seedManager
   }
 ];
 
@@ -44,6 +53,7 @@ export const mockSales: Sale[] = [
     change: 5.3,
     paymentMethod: "cash",
     createdAt: new Date().toISOString(),
+    createdBy: seedManager,
     items: [
       {
         productId: "prod-arroz",
