@@ -20,7 +20,7 @@ export function ScannerPage() {
   const [sessionId, setSessionId] = useState(initialSession);
   const [session, setSession] = useState<ScannerSession | null>(null);
   const [connected, setConnected] = useState(false);
-  const [message, setMessage] = useState("Conecte-se a uma sessão de caixa para usar o celular como leitor.");
+  const [message, setMessage] = useState("Conecte-se a uma sessão ativa para usar este dispositivo como leitor remoto.");
   const [manualBarcode, setManualBarcode] = useState("");
   const [cameraReady, setCameraReady] = useState(false);
   const [scanFlash, setScanFlash] = useState(false);
@@ -46,7 +46,7 @@ export function ScannerPage() {
         }
 
         setConnected(true);
-        setMessage(`Sessão ${session.pairingCode} conectada. Aponte a câmera para o código de barras.`);
+        setMessage(`Sessão ${session.pairingCode} conectada. Posicione a câmera sobre o código de barras.`);
       } catch {
         setConnected(false);
         setMessage("Sessão não encontrada. Confira o código de conexão.");
@@ -96,7 +96,7 @@ export function ScannerPage() {
         await videoRef.current.play();
         setCameraReady(true);
       } catch {
-        setMessage("Não foi possível abrir a câmera. Você ainda pode digitar o código manualmente.");
+        setMessage("Não foi possível abrir a câmera. Você ainda pode registrar o código manualmente.");
       }
     }
 
@@ -133,7 +133,7 @@ export function ScannerPage() {
 
         scanLockRef.current = true;
         await sendScannerBarcode(sessionId, barcode);
-        setMessage(`Código ${barcode} enviado para o caixa.`);
+        setMessage(`Código ${barcode} enviado com sucesso para o caixa.`);
         setScanFlash(true);
         if ("vibrate" in navigator) {
           navigator.vibrate(120);
@@ -177,7 +177,7 @@ export function ScannerPage() {
 
     try {
       await sendScannerBarcode(sessionId, manualBarcode.trim());
-      setMessage(`Código ${manualBarcode.trim()} enviado para o caixa.`);
+      setMessage(`Código ${manualBarcode.trim()} enviado com sucesso para o caixa.`);
       setScanFlash(true);
       if ("vibrate" in navigator) {
         navigator.vibrate(120);
@@ -194,21 +194,21 @@ export function ScannerPage() {
       <div className="mx-auto grid max-w-3xl gap-6">
         <header className="rounded-[28px] border border-brand-100 bg-white/90 p-6 shadow-soft">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-700">Scanner remoto</p>
-          <h1 className="mt-2 text-3xl font-bold text-brand-900">Usar este celular como leitor de barras</h1>
+          <h1 className="mt-2 text-3xl font-bold text-brand-900">Usar este dispositivo como leitor de código de barras</h1>
           <p className="mt-2 text-sm text-slate-600">
-            Abra esta tela no celular, conecte-se à sessão do caixa e a leitura será enviada para a frente de venda.
+            Abra esta tela no dispositivo móvel, conecte-se à sessão do caixa e envie leituras em tempo real para a venda em aberto.
           </p>
         </header>
 
         <section className="rounded-[28px] border border-brand-100 bg-white/90 p-6 shadow-soft">
           <div className="grid gap-4">
             <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Código ou ID da sessão
+              Código ou identificador da sessão
               <input
                 className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3"
                 value={sessionId}
                 onChange={(event) => setSessionId(event.target.value)}
-                placeholder="Cole aqui o ID da sessão"
+                placeholder="Cole aqui o identificador da sessão"
               />
             </label>
             {session ? (
@@ -241,7 +241,7 @@ export function ScannerPage() {
         <section className="rounded-[28px] border border-brand-100 bg-white/90 p-6 shadow-soft">
           <div className="mb-4 flex items-center gap-2 text-brand-900">
             <Keyboard className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">Fallback manual</h2>
+            <h2 className="text-lg font-semibold">Registro manual</h2>
           </div>
           <form className="grid gap-3" onSubmit={handleManualSubmit}>
             <input
@@ -252,7 +252,7 @@ export function ScannerPage() {
             />
             <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white" type="submit">
               <ScanBarcode className="h-4 w-4" />
-              Enviar código
+              Enviar leitura
             </button>
           </form>
         </section>
@@ -262,10 +262,10 @@ export function ScannerPage() {
             <LinkIcon className="h-4 w-4" />
             <strong>Como usar</strong>
           </div>
-          <p>1. No caixa, abra o emparelhamento do leitor remoto.</p>
-          <p>2. No celular, acesse este mesmo app e abra `/scanner`.</p>
-          <p>3. Cole o ID da sessão ou use o link gerado no caixa.</p>
-          <p>4. Leia o código de barras pela câmera ou digite manualmente.</p>
+          <p>1. No caixa, inicie uma sessão de leitor remoto.</p>
+          <p>2. No dispositivo móvel, acesse este mesmo app e abra `/scanner`.</p>
+          <p>3. Cole o identificador da sessão ou use o link gerado no caixa.</p>
+          <p>4. Leia o código de barras pela câmera ou registre o código manualmente.</p>
         </section>
       </div>
     </div>

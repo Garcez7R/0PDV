@@ -39,7 +39,7 @@ export function ConfiguracoesPage() {
       <PageHeader
         eyebrow="Configurações"
         title="Preferências da operação"
-        description="Parâmetros centrais da loja e controle manual da sincronização."
+        description="Parâmetros institucionais da operação e controle manual da sincronização."
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -59,7 +59,7 @@ export function ConfiguracoesPage() {
           </form>
         </SectionCard>
 
-        <SectionCard title="Sincronização" description="Visão operacional da fila offline-first.">
+        <SectionCard title="Sincronização" description="Visão operacional da fila local e integração com a nuvem.">
           <div className="grid gap-3">
             <button className="rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white" onClick={handleForceSync}>
               Forçar sincronização

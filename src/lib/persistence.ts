@@ -112,7 +112,7 @@ export async function saveSale(sale: Sale) {
   for (const item of sale.items) {
     const product = await tx.objectStore("products").get(item.productId);
     if (!product) {
-      throw new Error("Produto da venda nao encontrado.");
+      throw new Error("Produto da venda não encontrado.");
     }
 
     if (product.stockQty < item.quantity) {
@@ -151,12 +151,12 @@ export async function saveStockAdjustment(adjustment: StockAdjustment) {
   const product = await tx.objectStore("products").get(adjustment.productId);
 
   if (!product) {
-    throw new Error("Produto nao encontrado para ajuste.");
+    throw new Error("Produto não encontrado para ajuste.");
   }
 
   const nextQty = product.stockQty + adjustment.delta;
   if (nextQty < 0) {
-    throw new Error("Ajuste deixaria o estoque negativo.");
+    throw new Error("O ajuste deixaria o estoque negativo.");
   }
 
   await tx.objectStore("adjustments").put(adjustment);

@@ -17,19 +17,19 @@ export function HomePage() {
       <PageHeader
         eyebrow="Operação"
         title={settings.storeName}
-        description="Painel operacional com visão rápida de vendas, estoque crítico e pendências de sincronização."
+        description="Painel executivo com indicadores de vendas, estoque crítico e sincronização operacional."
       />
 
       <div className="grid gap-4 md:grid-cols-3">
         <KpiCard label="Vendas do dia" value={formatCurrency(todayRevenue)} helper={`${todaySales.length} venda(s) registradas hoje`} />
         <KpiCard label="Produtos em alerta" value={`${lowStockProducts.length} itens`} helper="Acompanhamento ativo de estoque mínimo." />
-        <KpiCard label="Fila offline" value={`${syncQueue.length} evento(s)`} helper="Pendências prontas para sincronizar." />
+        <KpiCard label="Fila de sincronização" value={`${syncQueue.length} evento(s)`} helper="Operações locais aguardando envio para a nuvem." />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
         <SectionCard
           title="Saúde da operação"
-          description="Indicadores úteis para abertura de caixa e acompanhamento do dia."
+          description="Indicadores úteis para abertura de caixa e acompanhamento contínuo da operação."
         >
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-3xl bg-canvas p-4">
@@ -47,7 +47,7 @@ export function HomePage() {
                 <span className="font-semibold">Última sincronização</span>
               </div>
               <p className="text-sm font-semibold text-brand-900">
-                {settings.lastSyncAt ? formatDate(settings.lastSyncAt) : "Ainda nao sincronizado"}
+                {settings.lastSyncAt ? formatDate(settings.lastSyncAt) : "Sincronização ainda não executada"}
               </p>
             </div>
             <div className="rounded-3xl bg-canvas p-4">
@@ -58,7 +58,7 @@ export function HomePage() {
               <p className="text-sm text-slate-600">
                 {lowStockProducts.length > 0
                   ? lowStockProducts.slice(0, 3).map((product) => product.name).join(", ")
-                  : "Nenhum produto em nivel critico."}
+                  : "Nenhum item em nível crítico."}
               </p>
             </div>
             <div className="rounded-3xl bg-canvas p-4">
@@ -66,14 +66,14 @@ export function HomePage() {
                 <WifiOff className="h-4 w-4" />
                 <span className="font-semibold">Modo offline</span>
               </div>
-              <p className="text-sm text-slate-600">A base local continua operando e enfileira alteracoes para envio posterior.</p>
+              <p className="text-sm text-slate-600">A base local permanece operacional e registra eventos para sincronização posterior.</p>
             </div>
           </div>
         </SectionCard>
 
         <SectionCard
           title="Vendas recentes"
-          description="Ultimos registros fechados no caixa."
+          description="Registros mais recentes finalizados na frente de caixa."
         >
           <div className="grid gap-3">
             {sales.slice(0, 4).map((sale) => (
@@ -87,7 +87,7 @@ export function HomePage() {
                 </div>
               </div>
             ))}
-            {sales.length === 0 ? <p className="text-sm text-slate-500">Nenhuma venda registrada ainda.</p> : null}
+            {sales.length === 0 ? <p className="text-sm text-slate-500">Nenhuma venda registrada até o momento.</p> : null}
           </div>
         </SectionCard>
       </div>

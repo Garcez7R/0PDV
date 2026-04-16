@@ -99,8 +99,18 @@ export function AppProvider({ children }: PropsWithChildren) {
 
   async function saveProduct(input: ProductInput) {
     const now = new Date().toISOString();
+    const normalizedBarcode = input.barcode.trim();
+    const duplicatedBarcode = products.find(
+      (product) => product.barcode === normalizedBarcode && product.id !== input.id
+    );
+
+    if (duplicatedBarcode) {
+      throw new Error("Já existe um produto cadastrado com este código de barras.");
+    }
+
     const product: Product = {
       ...input,
+      barcode: normalizedBarcode,
       id: input.id ?? generateId("prod"),
       updatedAt: now
     };
@@ -117,6 +127,14 @@ export function AppProvider({ children }: PropsWithChildren) {
   }
 
   async function deleteProduct(productId: string) {
+    if (sales.some((sale) => sale.items.some((item) => item.productId === productId))) {
+      throw new Error("Este produto possui histórico de vendas e não pode ser excluído.");
+    }
+
+    if (adjustments.some((adjustment) => adjustment.productId === productId)) {
+      throw new Error("Este produto possui histórico de ajustes e não pode ser excluído.");
+    }
+
     await deleteProductInDb(productId);
     await scheduleSync({
       id: generateId("sync"),
@@ -153,7 +171,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     const items = input.items.map((item) => {
       const product = products.find((candidate) => candidate.id === item.productId);
       if (!product) {
-        throw new Error("Produto nao encontrado na venda.");
+        throw new Error("Produto não encontrado na venda.");
       }
 
       return {
@@ -165,15 +183,18 @@ export function AppProvider({ children }: PropsWithChildren) {
     });
 
     const total = items.reduce((acc, item) => acc + item.subtotal, 0);
-    if (input.amountPaid < total) {
-      throw new Error("O valor recebido nao cobre o total da venda.");
+    const normalizedAmountPaid =
+      input.paymentMethod === "cash" ? input.amountPaid : Math.max(input.amountPaid, total);
+
+    if (normalizedAmountPaid < total) {
+      throw new Error("O valor recebido não cobre o total da venda.");
     }
 
     const sale: Sale = {
       id: generateId("sale"),
       total,
-      amountPaid: input.amountPaid,
-      change: input.amountPaid - total,
+      amountPaid: normalizedAmountPaid,
+      change: normalizedAmountPaid - total,
       paymentMethod: input.paymentMethod,
       createdAt,
       items
@@ -198,7 +219,7 @@ export function AppProvider({ children }: PropsWithChildren) {
   async function forceSync() {
     if (syncQueue.length > 0) {
       if (!cloudApiBaseUrl) {
-        throw new Error("Configure VITE_API_BASE_URL para sincronizar com o Worker publicado.");
+        throw new Error("Configure a variável VITE_API_BASE_URL para sincronizar com a API publicada.");
       }
 
       await pushSyncQueue(syncQueue);

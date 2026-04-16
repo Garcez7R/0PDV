@@ -76,29 +76,36 @@ export function ProdutosPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    try {
+      await saveProduct({
+        id: form.id,
+        name: form.name.trim(),
+        description: form.description.trim(),
+        barcode: form.barcode.trim(),
+        costPrice: Number(form.costPrice),
+        salePrice: Number(form.salePrice),
+        stockQty: Number(form.stockQty),
+        minStockQty: Number(form.minStockQty || settings.defaultMinStockQty)
+      });
 
-    await saveProduct({
-      id: form.id,
-      name: form.name.trim(),
-      description: form.description.trim(),
-      barcode: form.barcode.trim(),
-      costPrice: Number(form.costPrice),
-      salePrice: Number(form.salePrice),
-      stockQty: Number(form.stockQty),
-      minStockQty: Number(form.minStockQty || settings.defaultMinStockQty)
-    });
-
-    openForCreate();
-    setIsEditorOpen(false);
+      openForCreate();
+      setIsEditorOpen(false);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Não foi possível salvar o produto.");
+    }
   }
 
   async function handleDelete(productId: string) {
-    const confirmed = window.confirm("Deseja remover este produto do catalogo?");
+    const confirmed = window.confirm("Deseja remover este produto do catálogo?");
     if (!confirmed) {
       return;
     }
 
-    await deleteProduct(productId);
+    try {
+      await deleteProduct(productId);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Não foi possível excluir o produto.");
+    }
   }
 
   return (
@@ -106,11 +113,11 @@ export function ProdutosPage() {
       <PageHeader
         eyebrow="Produtos"
         title="Cadastro e gestão do catálogo"
-        description="CRUD funcional com persistência local, pronto para evoluir depois para sync completo com o backend."
+        description="Gestão estruturada do catálogo com persistência local e sincronização preparada para a nuvem."
       />
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
-        <SectionCard title="Lista de produtos" description="Busca por nome ou codigo de barras.">
+        <SectionCard title="Lista de produtos" description="Pesquise por nome ou código de barras.">
           <div className="mb-4 flex flex-col gap-3 md:flex-row">
             <input
               className="w-full rounded-2xl border border-brand-100 bg-canvas px-4 py-3"
@@ -158,12 +165,12 @@ export function ProdutosPage() {
 
         <SectionCard
           title={form.id ? "Editar produto" : "Novo produto"}
-          description="Formulario principal do catalogo."
+          description="Formulário principal de cadastro e atualização do catálogo."
           className={isEditorOpen ? "" : "opacity-90"}
         >
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-slate-500">
-              {form.id ? "Ajuste os campos e salve para atualizar o produto." : "Cadastre um item completo do catalogo."}
+              {form.id ? "Revise os campos e salve para atualizar o produto." : "Cadastre um item completo do catálogo."}
             </p>
             {isEditorOpen ? (
               <button className="rounded-full border border-brand-100 p-2 text-slate-500" onClick={() => setIsEditorOpen(false)}>

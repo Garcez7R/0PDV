@@ -39,9 +39,13 @@ export function EstoquePage() {
       return;
     }
 
-    await adjustStock(selectedProduct.id, Number(delta), reason.trim());
-    setDelta("1");
-    setReason("Reposição manual");
+    try {
+      await adjustStock(selectedProduct.id, Number(delta), reason.trim());
+      setDelta("1");
+      setReason("Reposição manual");
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Não foi possível aplicar o ajuste de estoque.");
+    }
   }
 
   return (
@@ -49,11 +53,11 @@ export function EstoquePage() {
       <PageHeader
         eyebrow="Estoque"
         title="Visão operacional do estoque"
-        description="Controle funcional com busca, alerta de mínimo e ajuste manual de entrada e saída."
+        description="Controle de estoque com consulta rápida, alertas de mínimo e ajustes operacionais."
       />
 
       <div className="grid gap-4 xl:grid-cols-[1.3fr_0.9fr]">
-        <SectionCard title="Produtos em estoque" description="Base local ativa com atualização imediata.">
+        <SectionCard title="Produtos em estoque" description="Base local ativa com atualização imediata dos saldos.">
           <div className="mb-4 flex flex-col gap-3 md:flex-row">
             <input
               className="w-full rounded-2xl border border-brand-100 bg-canvas px-4 py-3"
@@ -63,7 +67,7 @@ export function EstoquePage() {
             />
             <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-100 bg-white px-4 py-3 font-medium text-brand-900">
               <ArrowUpDown className="h-4 w-4" />
-              Ajuste manual ativo
+              Ajuste manual disponível
             </button>
           </div>
 
@@ -107,7 +111,7 @@ export function EstoquePage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Ajustar estoque" description="Entrada positiva, saida negativa.">
+        <SectionCard title="Ajustar estoque" description="Use valores positivos para entrada e negativos para saída.">
           <form className="grid gap-4" onSubmit={handleAdjustment}>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Produto

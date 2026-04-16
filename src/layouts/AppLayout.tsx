@@ -6,7 +6,7 @@ const links = [
   { to: "/", label: "Início", icon: House },
   { to: "/caixa", label: "Caixa", icon: ShoppingCart },
   { to: "/estoque", label: "Estoque", icon: Boxes },
-  { to: "/produtos", label: "Produtos", icon: Boxes },
+  { to: "/produtos", label: "Catálogo", icon: Boxes },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/configuracoes", label: "Configurações", icon: Settings }
 ];
@@ -20,10 +20,10 @@ export function AppLayout() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-700">nexaPDV</p>
-            <h1 className="text-xl font-bold text-brand-900">Caixa e estoque para mercadinho</h1>
+            <h1 className="text-xl font-bold text-brand-900">Operação de caixa, estoque e catálogo</h1>
           </div>
           <div className="rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-sm text-brand-900">
-            Offline-first pronto para sincronizar com Cloudflare D1
+            PWA offline-first com sincronização para Cloudflare D1
           </div>
         </div>
       </header>

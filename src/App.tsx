@@ -13,7 +13,7 @@ export default function App() {
   const { loading } = useAppState();
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center bg-canvas text-brand-900">Carregando base local...</div>;
+    return <div className="flex min-h-screen items-center justify-center bg-canvas text-brand-900">Carregando dados locais...</div>;
   }
 
   return (

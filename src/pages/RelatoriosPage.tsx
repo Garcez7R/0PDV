@@ -30,11 +30,11 @@ export function RelatoriosPage() {
       <PageHeader
         eyebrow="Relatórios"
         title="Resumo executivo de vendas e estoque"
-        description="Métricas por período com leitura rápida para gestão do mercadinho."
+        description="Métricas por período para acompanhamento comercial e reposição de estoque."
       />
 
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <SectionCard title="Filtros e indicadores" description="Atalhos por dia, semana e mês.">
+        <SectionCard title="Filtros e indicadores" description="Atalhos para análise diária, semanal e mensal.">
           <div className="grid gap-3">
             <button className={period === "today" ? "rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white" : "rounded-2xl border border-brand-100 bg-white px-4 py-3 font-medium text-brand-900"} onClick={() => setPeriod("today")}>Hoje</button>
             <button className={period === "week" ? "rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white" : "rounded-2xl border border-brand-100 bg-white px-4 py-3 font-medium text-brand-900"} onClick={() => setPeriod("week")}>Últimos 7 dias</button>
@@ -51,7 +51,7 @@ export function RelatoriosPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Vendas recentes" description="Movimentações dentro do período selecionado.">
+        <SectionCard title="Vendas recentes" description="Movimentações registradas dentro do período selecionado.">
           <div className="grid gap-3">
             {filteredSales.map((sale) => (
               <div key={sale.id} className="rounded-2xl border border-brand-100 bg-canvas p-4">

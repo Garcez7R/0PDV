@@ -18,7 +18,15 @@ async function request<TResponse>(path: string, init?: RequestInit): Promise<TRe
   });
 
   if (!response.ok) {
-    throw new Error(`Falha na requisição ${path}`);
+    let message = `Falha na requisição ${path}`;
+    try {
+      const payload = (await response.json()) as { message?: string };
+      message = payload.message ?? message;
+    } catch {
+      // Ignore JSON parsing errors and keep the fallback message.
+    }
+
+    throw new Error(message);
   }
 
   return response.json() as Promise<TResponse>;

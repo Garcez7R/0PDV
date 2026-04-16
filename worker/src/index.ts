@@ -302,7 +302,7 @@ export default {
         .first<ScannerSessionRecord>();
 
       if (!result) {
-        return json({ message: "Scanner session not found" }, { status: 404 });
+        return json({ message: "Sessão do leitor remoto não encontrada." }, { status: 404 });
       }
 
       return json(mapScannerSession(result));
@@ -321,7 +321,7 @@ export default {
         .first<ScannerSessionRecord>();
 
       if (!result) {
-        return json({ message: "Scanner session not found" }, { status: 404 });
+        return json({ message: "Sessão do leitor remoto não encontrada." }, { status: 404 });
       }
 
       return json(mapScannerSession(result));
@@ -339,7 +339,7 @@ export default {
         .first<{ id: string; status: string; expires_at: string }>();
 
       if (!session || session.status !== "open" || session.expires_at < createdAt) {
-        return json({ message: "Scanner session is not active" }, { status: 400 });
+        return json({ message: "A sessão do leitor remoto não está ativa." }, { status: 400 });
       }
 
       await env.nexa_pdv
@@ -386,6 +386,6 @@ export default {
       return json(mapScannerScan(scan));
     }
 
-    return json({ message: "Route not found" }, { status: 404 });
+    return json({ message: "Rota não encontrada." }, { status: 404 });
   }
 };

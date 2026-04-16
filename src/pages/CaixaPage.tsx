@@ -183,18 +183,21 @@ export function CaixaPage() {
       setCart([]);
       setAmountPaid("");
       setPaymentMethod("cash");
-      setMessage("Venda concluída com sucesso. Estoque atualizado localmente.");
+      setMessage("Venda concluída com sucesso. Estoque atualizado na base local.");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Nao foi possivel finalizar a venda.");
+      setMessage(error instanceof Error ? error.message : "Não foi possível concluir a venda.");
     }
   }
 
   async function startRemoteScanner() {
     try {
+      if (scannerSession) {
+        await endScannerSession(scannerSession.id);
+      }
       const session = await openScannerSession();
       setScannerSession(session);
       setScannerLink(`${window.location.origin}/scanner?session=${session.id}`);
-      setMessage("Sessão de leitor remoto pronta. Abra o link no celular e comece a escanear.");
+      setMessage("Sessão do leitor remoto iniciada. Abra o link no dispositivo móvel e inicie a leitura.");
     } catch {
       setMessage("Não foi possível abrir a sessão do leitor remoto.");
     }
@@ -237,12 +240,12 @@ export function CaixaPage() {
     <div>
       <PageHeader
         eyebrow="Caixa"
-        title="Frente de venda híbrida"
-        description="Fluxo funcional para busca, lançamento de itens, pagamento e baixa automática no estoque."
+        title="Frente de caixa"
+        description="Operação de venda com busca de itens, pagamento, leitura remota e baixa automática no estoque."
       />
 
       <div className="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
-        <SectionCard title="Lançamento da venda" description="Busca por nome ou codigo de barras.">
+        <SectionCard title="Lançamento da venda" description="Pesquise por nome ou código de barras.">
           <div className="grid gap-4">
             <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
               <input
@@ -267,13 +270,13 @@ export function CaixaPage() {
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-700">Leitor remoto ativo</p>
                       <p className="mt-1 text-lg font-bold text-brand-900">Sessão {scannerSession.pairingCode}</p>
-                      <p className="mt-1 text-sm text-slate-600">Abra o link no celular conectado à mesma operação para enviar leituras ao caixa.</p>
+                      <p className="mt-1 text-sm text-slate-600">Abra o link no dispositivo da operação para enviar leituras diretamente ao caixa.</p>
                       <div className="mt-3 flex flex-wrap gap-2 text-sm">
                         <span className="rounded-full bg-white px-3 py-2 font-medium text-brand-900">
                           Status: {scannerSession.status === "open" ? "Ativa" : "Encerrada"}
                         </span>
                         <span className="rounded-full bg-white px-3 py-2 font-medium text-brand-900">
-                          Expira em: {scannerTimeLeft || "--:--"}
+                          Tempo restante: {scannerTimeLeft || "--:--"}
                         </span>
                       </div>
                     </div>
@@ -297,7 +300,7 @@ export function CaixaPage() {
                 <QrCodeCard
                   value={scannerLink}
                   title="Abrir no celular"
-                  description="Leia este QR Code com a câmera do celular para abrir o scanner remoto. Renove a sessão quando expirar."
+                  description="Leia este QR Code com a câmera do dispositivo para abrir o scanner remoto. Renove a sessão quando expirar."
                 />
               </div>
             ) : null}
@@ -344,7 +347,7 @@ export function CaixaPage() {
           </div>
         </SectionCard>
 
-        <SectionCard title="Fechamento" description="Resumo, pagamento e sincronização.">
+        <SectionCard title="Fechamento" description="Resumo financeiro, pagamento e sincronização.">
           <div className="grid gap-4">
             <div className="rounded-3xl bg-brand-900 p-5 text-white">
               <p className="text-sm uppercase tracking-[0.2em] text-brand-100">Total da venda</p>
@@ -374,7 +377,7 @@ export function CaixaPage() {
                 <strong>{formatCurrency(Math.max(received - total, 0))}</strong>
               </div>
               <div className="flex items-center justify-between">
-                <span>Pendências offline</span>
+                <span>Pendências de sincronização</span>
                 <strong>{syncQueue.length}</strong>
               </div>
             </div>
@@ -383,9 +386,9 @@ export function CaixaPage() {
               <button className="rounded-2xl bg-accent px-4 py-3 font-semibold text-brand-900" onClick={finalizeSale}>
                 Finalizar venda
               </button>
-              <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-100 bg-white px-4 py-3 font-medium text-slate-700" onClick={() => setMessage("A fila local já está pronta para sincronizar automaticamente quando você quiser forçar o envio.")}>
+              <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-100 bg-white px-4 py-3 font-medium text-slate-700" onClick={() => setMessage("As operações locais seguem registradas e podem ser sincronizadas manualmente a qualquer momento.")}>
                 <ScanLine className="h-4 w-4" />
-                Ver estado da sincronização
+                Revisar sincronização
               </button>
             </div>
           </div>
