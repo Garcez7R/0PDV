@@ -5,6 +5,7 @@ import { SectionCard } from "../components/SectionCard";
 import { useAppState } from "../context/useAppState";
 import type { PaymentMethod, Product } from "../lib/types";
 import { openScannerSession, pollScannerBarcode } from "../modules/scanner/services/scanner-service";
+import { QrCodeCard } from "../shared/components/QrCodeCard";
 import { formatCurrency } from "../lib/utils";
 
 type CartItem = {
@@ -199,19 +200,26 @@ export function CaixaPage() {
             </div>
 
             {scannerSessionId ? (
-              <div className="rounded-3xl border border-brand-100 bg-brand-50 p-4">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-700">Leitor remoto ativo</p>
-                    <p className="mt-1 text-lg font-bold text-brand-900">Sessão {scannerPairingCode}</p>
-                    <p className="mt-1 text-sm text-slate-600">Abra o link no celular conectado à mesma operação para enviar leituras ao caixa.</p>
+              <div className="grid gap-4 rounded-3xl border border-brand-100 bg-brand-50 p-4 lg:grid-cols-[1fr_260px]">
+                <div>
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-700">Leitor remoto ativo</p>
+                      <p className="mt-1 text-lg font-bold text-brand-900">Sessão {scannerPairingCode}</p>
+                      <p className="mt-1 text-sm text-slate-600">Abra o link no celular conectado à mesma operação para enviar leituras ao caixa.</p>
+                    </div>
+                    <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-100 bg-white px-4 py-3 font-medium text-brand-900" onClick={copyScannerLink}>
+                      <LinkIcon className="h-4 w-4" />
+                      Copiar link
+                    </button>
                   </div>
-                  <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-100 bg-white px-4 py-3 font-medium text-brand-900" onClick={copyScannerLink}>
-                    <LinkIcon className="h-4 w-4" />
-                    Copiar link
-                  </button>
+                  <p className="mt-3 break-all rounded-2xl bg-white px-4 py-3 text-sm text-slate-700">{scannerLink}</p>
                 </div>
-                <p className="mt-3 break-all rounded-2xl bg-white px-4 py-3 text-sm text-slate-700">{scannerLink}</p>
+                <QrCodeCard
+                  value={scannerLink}
+                  title="Abrir no celular"
+                  description="Leia este QR Code com a câmera do celular para abrir o scanner remoto."
+                />
               </div>
             ) : null}
 
