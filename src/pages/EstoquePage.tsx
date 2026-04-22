@@ -4,7 +4,7 @@ import { PageHeader } from "../components/PageHeader";
 import { SectionCard } from "../components/SectionCard";
 import { useAppState } from "../context/useAppState";
 import type { Product } from "../lib/types";
-import { formatDate } from "../lib/utils";
+import { formatDate, formatQuantity } from "../lib/utils";
 
 export function EstoquePage() {
   const { products, adjustments, adjustStock, currentUser } = useAppState();
@@ -90,8 +90,8 @@ export function EstoquePage() {
                     <tr key={product.id} className="border-t border-brand-100 cursor-pointer hover:bg-brand-50/60" onClick={() => setSelectedProductId(product.id)}>
                       <td className="px-4 py-3 font-medium text-brand-900">{product.name}</td>
                       <td className="px-4 py-3 text-slate-500">{product.barcode}</td>
-                      <td className="px-4 py-3">{product.stockQty}</td>
-                      <td className="px-4 py-3">{product.minStockQty}</td>
+                      <td className="px-4 py-3">{formatQuantity(product.stockQty, product.saleMode)}</td>
+                      <td className="px-4 py-3">{formatQuantity(product.minStockQty, product.saleMode)}</td>
                       <td className="px-4 py-3">
                         <span
                           className={
@@ -148,7 +148,7 @@ export function EstoquePage() {
                   Produto selecionado: <strong className="text-brand-900">{selectedProduct.name}</strong>
                 </p>
                 <p>
-                  Estoque atual: <strong className="text-brand-900">{selectedProduct.stockQty}</strong>
+                  Estoque atual: <strong className="text-brand-900">{formatQuantity(selectedProduct.stockQty, selectedProduct.saleMode)}</strong>
                 </p>
               </div>
             ) : null}

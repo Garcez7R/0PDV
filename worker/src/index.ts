@@ -15,6 +15,7 @@ type ProductRecord = {
   name: string;
   description: string;
   barcode: string;
+  sale_mode: "unit" | "weight";
   cost_price: number;
   sale_price: number;
   stock_qty: number;
@@ -37,6 +38,7 @@ type SaleItemRecord = {
   quantity: number;
   unit_price: number;
   subtotal: number;
+  sale_mode: "unit" | "weight";
 };
 
 type ScannerSessionRecord = {
@@ -72,6 +74,7 @@ function mapProduct(record: ProductRecord) {
     name: record.name,
     description: record.description,
     barcode: record.barcode,
+    saleMode: record.sale_mode,
     costPrice: record.cost_price,
     salePrice: record.sale_price,
     stockQty: record.stock_qty,
@@ -94,7 +97,8 @@ function mapSales(sales: SaleRecord[], saleItems: SaleItemRecord[]) {
         productId: item.product_id,
         quantity: item.quantity,
         unitPrice: item.unit_price,
-        subtotal: item.subtotal
+        subtotal: item.subtotal,
+        saleMode: item.sale_mode
       }))
   }));
 }
@@ -132,6 +136,7 @@ async function applyProductOperation(env: Env, operation: SyncOperation) {
     name?: string;
     description?: string;
     barcode?: string;
+    saleMode?: "unit" | "weight";
     costPrice?: number;
     salePrice?: number;
     stockQty?: number;
@@ -147,14 +152,15 @@ async function applyProductOperation(env: Env, operation: SyncOperation) {
   await env.nexa_pdv
     .prepare(
       `INSERT OR REPLACE INTO products
-      (id, name, description, barcode, cost_price, sale_price, stock_qty, min_stock_qty, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (id, name, description, barcode, sale_mode, cost_price, sale_price, stock_qty, min_stock_qty, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       payload.id,
       payload.name,
       payload.description,
       payload.barcode,
+      payload.saleMode ?? "unit",
       payload.costPrice,
       payload.salePrice,
       payload.stockQty,
@@ -177,6 +183,7 @@ async function applySaleOperation(env: Env, operation: SyncOperation) {
       quantity: number;
       unitPrice: number;
       subtotal: number;
+      saleMode: "unit" | "weight";
     }>;
   };
 
@@ -194,11 +201,11 @@ async function applySaleOperation(env: Env, operation: SyncOperation) {
   for (const item of payload.items) {
     await env.nexa_pdv
       .prepare(
-        `INSERT INTO sale_items
-        (id, sale_id, product_id, quantity, unit_price, subtotal)
-        VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO sale_items
+        (id, sale_id, product_id, quantity, unit_price, subtotal, sale_mode)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`
       )
-      .bind(`${payload.id}-${item.productId}`, payload.id, item.productId, item.quantity, item.unitPrice, item.subtotal)
+      .bind(`${payload.id}-${item.productId}`, payload.id, item.productId, item.quantity, item.unitPrice, item.subtotal, item.saleMode)
       .run();
   }
 }
@@ -243,7 +250,7 @@ export default {
     if (request.method === "GET" && url.pathname === "/api/sales") {
       const [salesResult, itemsResult] = await Promise.all([
         env.nexa_pdv.prepare("SELECT * FROM sales ORDER BY created_at DESC").all<SaleRecord>(),
-        env.nexa_pdv.prepare("SELECT sale_id, product_id, quantity, unit_price, subtotal FROM sale_items").all<SaleItemRecord>()
+        env.nexa_pdv.prepare("SELECT sale_id, product_id, quantity, unit_price, subtotal, sale_mode FROM sale_items").all<SaleItemRecord>()
       ]);
       return json(mapSales(salesResult.results, itemsResult.results));
     }

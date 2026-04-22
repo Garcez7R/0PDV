@@ -32,3 +32,21 @@ input {
 button {
   cursor: pointer;
 }
+
+.brand-zero {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.9em;
+}
+
+.brand-zero::after {
+  content: "";
+  position: absolute;
+  width: 90%;
+  height: 0.12em;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(-32deg);
+}

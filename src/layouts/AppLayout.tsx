@@ -2,6 +2,7 @@ import { BarChart3, Boxes, House, LogOut, Settings, ShoppingCart } from "lucide-
 import { NavLink, Outlet } from "react-router-dom";
 import { useAppState } from "../context/useAppState";
 import { cn } from "../lib/utils";
+import { BrandWordmark } from "../shared/components/BrandWordmark";
 
 const links = [
   { to: "/", label: "Início", icon: House },
@@ -22,12 +23,12 @@ export function AppLayout() {
       <header className="border-b border-brand-100/80 bg-white/75 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-700">nexaPDV</p>
+            <BrandWordmark size="sm" />
             <h1 className="text-xl font-bold text-brand-900">Operação de caixa, estoque e catálogo</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <div className="rounded-full border border-brand-100 bg-brand-50 px-4 py-2 text-sm text-brand-900">
-              PWA offline-first com sincronização para Cloudflare D1
+              Operação híbrida para balcão, tablet e retaguarda
             </div>
             {currentUser ? (
               <div className="flex items-center gap-2 rounded-full border border-brand-100 bg-white px-3 py-2 text-sm text-brand-900">

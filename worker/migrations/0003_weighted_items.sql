@@ -1,0 +1,2 @@
+ALTER TABLE products ADD COLUMN sale_mode TEXT NOT NULL DEFAULT 'unit';
+ALTER TABLE sale_items ADD COLUMN sale_mode TEXT NOT NULL DEFAULT 'unit';

@@ -24,3 +24,17 @@ export function formatDate(value: string) {
 export function formatNumber(value: number) {
   return new Intl.NumberFormat("pt-BR").format(value);
 }
+
+export function formatQuantity(value: number, saleMode: "unit" | "weight") {
+  if (saleMode === "weight") {
+    return `${new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3
+    }).format(value)} kg`;
+  }
+
+  return `${new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(value)} un`;
+}

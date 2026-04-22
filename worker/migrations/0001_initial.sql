@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS products (
   name TEXT NOT NULL,
   description TEXT NOT NULL,
   barcode TEXT NOT NULL UNIQUE,
+  sale_mode TEXT NOT NULL DEFAULT 'unit',
   cost_price REAL NOT NULL,
   sale_price REAL NOT NULL,
   stock_qty INTEGER NOT NULL DEFAULT 0,
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS sale_items (
   quantity INTEGER NOT NULL,
   unit_price REAL NOT NULL,
   subtotal REAL NOT NULL,
+  sale_mode TEXT NOT NULL DEFAULT 'unit',
   FOREIGN KEY (sale_id) REFERENCES sales(id),
   FOREIGN KEY (product_id) REFERENCES products(id)
 );

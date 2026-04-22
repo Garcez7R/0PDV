@@ -69,7 +69,7 @@ export type AppContextValue = {
 
 const emptySettings: AppSettings = {
   id: "app-settings",
-  storeName: "Mercadinho Nexa",
+  storeName: "0PDV",
   defaultMinStockQty: 5,
   lastSyncAt: null,
   operatorName: "Operador",
@@ -297,7 +297,8 @@ export function AppProvider({ children }: PropsWithChildren) {
         productId: product.id,
         quantity: item.quantity,
         unitPrice: product.salePrice,
-        subtotal: product.salePrice * item.quantity
+        subtotal: product.salePrice * item.quantity,
+        saleMode: product.saleMode
       };
     });
 

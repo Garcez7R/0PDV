@@ -11,7 +11,7 @@ import {
   pollScannerBarcode
 } from "../modules/scanner/services/scanner-service";
 import { QrCodeCard } from "../shared/components/QrCodeCard";
-import { formatCurrency } from "../lib/utils";
+import { formatCurrency, formatQuantity } from "../lib/utils";
 
 type CartItem = {
   productId: string;
@@ -31,9 +31,14 @@ const paymentOptions: Array<{ value: PaymentMethod; label: string }> = [
   { value: "credit", label: "Cartão crédito" }
 ];
 
+function getDefaultRequestedQuantity(product: Product) {
+  return product.saleMode === "weight" ? 0.1 : 1;
+}
+
 export function CaixaPage() {
   const { products, createSale, syncQueue } = useAppState();
   const [query, setQuery] = useState("");
+  const [requestedQuantity, setRequestedQuantity] = useState("1");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [amountPaid, setAmountPaid] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
@@ -54,8 +59,10 @@ export function CaixaPage() {
     );
   }, [products, query]);
 
+  const highlightedProduct = matchingProducts[0];
+
   const cartDetailed: CartDetailedItem[] = cart.flatMap((item) => {
-    const product = products.find((candidate) => candidate.id === item.productId) as Product | undefined;
+    const product = products.find((candidate) => candidate.id === item.productId);
     return product
       ? [
           {
@@ -69,6 +76,20 @@ export function CaixaPage() {
 
   const total = cartDetailed.reduce((acc, item) => acc + item.subtotal, 0);
   const received = Number(amountPaid || 0);
+
+  useEffect(() => {
+    if (!highlightedProduct) {
+      return;
+    }
+
+    setRequestedQuantity((current) => {
+      if (!current.trim()) {
+        return highlightedProduct.saleMode === "weight" ? "0.100" : "1";
+      }
+
+      return current;
+    });
+  }, [highlightedProduct]);
 
   useEffect(() => {
     if (!scannerSession?.id) {
@@ -96,12 +117,35 @@ export function CaixaPage() {
 
         const product = products.find((candidate) => candidate.barcode === scan.barcode);
         if (!product) {
-          setMessage(`Código ${scan.barcode} recebido do celular, mas nenhum produto corresponde a ele.`);
+          setMessage(`Código ${scan.barcode} recebido, mas nenhum produto corresponde a ele.`);
           return;
         }
 
-        addToCart(product);
-        setMessage(`Leitura remota recebida: ${product.name}.`);
+        const quantity = getDefaultRequestedQuantity(product);
+        setCart((current) => {
+          const existing = current.find((item) => item.productId === product.id);
+          const nextQuantity = existing ? existing.quantity + quantity : quantity;
+
+          if (nextQuantity > product.stockQty) {
+            setMessage(`Estoque insuficiente para ${product.name}.`);
+            return current;
+          }
+
+          if (existing) {
+            return current.map((item) =>
+              item.productId === product.id
+                ? { ...item, quantity: Number(nextQuantity.toFixed(product.saleMode === "weight" ? 3 : 0)) }
+                : item
+            );
+          }
+
+          return [...current, { productId: product.id, quantity }];
+        });
+        if (product.saleMode === "weight") {
+          setMessage(`Leitura remota recebida para ${product.name}. Ajuste o peso no caixa antes de concluir.`);
+        } else {
+          setMessage(`Leitura remota recebida: ${product.name}.`);
+        }
       } catch {
         // Keep polling silently while the session is active.
       }
@@ -135,28 +179,68 @@ export function CaixaPage() {
     return () => window.clearInterval(timer);
   }, [scannerSession]);
 
-  function addToCart(product: Product) {
+  function getRequestedQuantity(product: Product) {
+    const parsed = Number(requestedQuantity.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return null;
+    }
+
+    if (product.saleMode === "weight") {
+      return Number(parsed.toFixed(3));
+    }
+
+    return Math.max(1, Math.round(parsed));
+  }
+
+  function addToCart(product: Product, explicitQuantity?: number) {
     setMessage("");
+    const quantity = explicitQuantity ?? getRequestedQuantity(product);
+    if (!quantity || quantity <= 0) {
+      setMessage(product.saleMode === "weight" ? "Informe um peso válido em quilogramas." : "Informe uma quantidade válida.");
+      return;
+    }
+
     setCart((current) => {
       const existing = current.find((item) => item.productId === product.id);
+      const nextQuantity = existing ? existing.quantity + quantity : quantity;
+
+      if (nextQuantity > product.stockQty) {
+        setMessage(`Estoque insuficiente para ${product.name}.`);
+        return current;
+      }
+
       if (existing) {
         return current.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: Math.min(item.quantity + 1, product.stockQty) }
+            ? { ...item, quantity: Number(nextQuantity.toFixed(product.saleMode === "weight" ? 3 : 0)) }
             : item
         );
       }
 
-      return [...current, { productId: product.id, quantity: 1 }];
+      return [...current, { productId: product.id, quantity }];
     });
+
     setQuery("");
+    setRequestedQuantity(product.saleMode === "weight" ? "0.100" : "1");
   }
 
-  function changeQuantity(productId: string, nextQuantity: number) {
+  function changeQuantity(product: Product, nextQuantity: number) {
+    if (nextQuantity <= 0) {
+      removeItem(product.id);
+      return;
+    }
+
+    if (nextQuantity > product.stockQty) {
+      setMessage(`Estoque insuficiente para ${product.name}.`);
+      return;
+    }
+
     setCart((current) =>
-      current
-        .map((item) => (item.productId === productId ? { ...item, quantity: nextQuantity } : item))
-        .filter((item) => item.quantity > 0)
+      current.map((item) =>
+        item.productId === product.id
+          ? { ...item, quantity: Number(nextQuantity.toFixed(product.saleMode === "weight" ? 3 : 0)) }
+          : item
+      )
     );
   }
 
@@ -247,14 +331,20 @@ export function CaixaPage() {
       <div className="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
         <SectionCard title="Lançamento da venda" description="Pesquise por nome ou código de barras.">
           <div className="grid gap-4">
-            <div className="grid gap-3 md:grid-cols-[1fr_auto_auto]">
+            <div className="grid gap-3 md:grid-cols-[1fr_180px_auto_auto]">
               <input
                 className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3 outline-none ring-0 placeholder:text-slate-400"
                 placeholder="Digite o código de barras ou nome do produto"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
               />
-              <button className="rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white" onClick={() => matchingProducts[0] && addToCart(matchingProducts[0])}>
+              <input
+                className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3 outline-none ring-0"
+                placeholder={highlightedProduct?.saleMode === "weight" ? "Peso em kg" : "Quantidade"}
+                value={requestedQuantity}
+                onChange={(event) => setRequestedQuantity(event.target.value)}
+              />
+              <button className="rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white" onClick={() => highlightedProduct && addToCart(highlightedProduct)}>
                 Adicionar item
               </button>
               <button className="inline-flex items-center justify-center gap-2 rounded-2xl border border-brand-100 bg-white px-4 py-3 font-medium text-brand-900" onClick={startRemoteScanner}>
@@ -263,6 +353,15 @@ export function CaixaPage() {
               </button>
             </div>
 
+            {highlightedProduct ? (
+              <div className="rounded-2xl bg-canvas p-4 text-sm text-slate-600">
+                Produto em foco: <strong className="text-brand-900">{highlightedProduct.name}</strong> •{" "}
+                {highlightedProduct.saleMode === "weight"
+                  ? "Informe o peso em quilogramas. Exemplo: 135 g = 0,135 kg."
+                  : "Lançamento por unidade."}
+              </div>
+            ) : null}
+
             {scannerSession ? (
               <div className="grid gap-4 rounded-3xl border border-brand-100 bg-brand-50 p-4 lg:grid-cols-[1fr_260px]">
                 <div>
@@ -270,7 +369,9 @@ export function CaixaPage() {
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brand-700">Leitor remoto ativo</p>
                       <p className="mt-1 text-lg font-bold text-brand-900">Sessão {scannerSession.pairingCode}</p>
-                      <p className="mt-1 text-sm text-slate-600">Abra o link no dispositivo da operação para enviar leituras diretamente ao caixa.</p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        No celular, abra o 0PDV em <strong>/scanner</strong> e leia o QR Code abaixo para parear com este caixa.
+                      </p>
                       <div className="mt-3 flex flex-wrap gap-2 text-sm">
                         <span className="rounded-full bg-white px-3 py-2 font-medium text-brand-900">
                           Status: {scannerSession.status === "open" ? "Ativa" : "Encerrada"}
@@ -299,8 +400,8 @@ export function CaixaPage() {
                 </div>
                 <QrCodeCard
                   value={scannerLink}
-                  title="Abrir no celular"
-                  description="Leia este QR Code com a câmera do dispositivo para abrir o scanner remoto. Renove a sessão quando expirar."
+                  title="Parear no celular"
+                  description="Abra o 0PDV no celular, entre em /scanner e use a opção de leitura de QR para conectar este caixa ao leitor remoto."
                 />
               </div>
             ) : null}
@@ -309,11 +410,12 @@ export function CaixaPage() {
               <p className="mb-3 text-sm font-semibold text-brand-900">Sugestões para lançamento rápido</p>
               <div className="grid gap-3 md:grid-cols-2">
                 {matchingProducts.slice(0, 6).map((product) => (
-                  <button key={product.id} className="rounded-2xl border border-brand-100 bg-canvas p-4 text-left" onClick={() => addToCart(product)}>
+                  <button key={product.id} className="rounded-2xl border border-brand-100 bg-canvas p-4 text-left" onClick={() => addToCart(product, getDefaultRequestedQuantity(product))}>
                     <p className="font-semibold text-brand-900">{product.name}</p>
                     <p className="text-sm text-slate-500">{product.barcode}</p>
                     <p className="mt-2 text-sm text-brand-900">
-                      {formatCurrency(product.salePrice)} • Estoque {product.stockQty}
+                      {formatCurrency(product.salePrice)}
+                      {product.saleMode === "weight" ? "/kg" : ""} • {formatQuantity(product.stockQty, product.saleMode)}
                     </p>
                   </button>
                 ))}
@@ -325,17 +427,31 @@ export function CaixaPage() {
                 <div key={item.product.id} className="grid items-center gap-3 rounded-2xl border border-brand-100 bg-canvas px-4 py-4 md:grid-cols-[1fr_auto_auto_auto]">
                   <div>
                     <p className="font-semibold text-brand-900">{item.product.name}</p>
-                    <p className="text-sm text-slate-500">Saldo disponível: {item.product.stockQty}</p>
+                    <p className="text-sm text-slate-500">
+                      Saldo disponível: {formatQuantity(item.product.stockQty, item.product.saleMode)}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button className="rounded-full border border-brand-100 p-2 text-brand-900" onClick={() => changeQuantity(item.product.id, item.quantity - 1)}>
-                      <Minus className="h-4 w-4" />
-                    </button>
-                    <span className="rounded-full bg-white px-3 py-2 text-sm font-medium text-slate-600">{item.quantity}</span>
-                    <button className="rounded-full border border-brand-100 p-2 text-brand-900" onClick={() => changeQuantity(item.product.id, Math.min(item.quantity + 1, item.product.stockQty))}>
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
+                  {item.product.saleMode === "weight" ? (
+                    <input
+                      className="rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm font-medium text-slate-700"
+                      type="number"
+                      min="0.001"
+                      max={item.product.stockQty}
+                      step="0.001"
+                      value={item.quantity}
+                      onChange={(event) => changeQuantity(item.product, Number(event.target.value))}
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button className="rounded-full border border-brand-100 p-2 text-brand-900" onClick={() => changeQuantity(item.product, item.quantity - 1)}>
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="rounded-full bg-white px-3 py-2 text-sm font-medium text-slate-600">{item.quantity}</span>
+                      <button className="rounded-full border border-brand-100 p-2 text-brand-900" onClick={() => changeQuantity(item.product, item.quantity + 1)}>
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                   <div className="text-sm font-semibold text-brand-900">{formatCurrency(item.subtotal)}</div>
                   <button className="inline-flex items-center justify-center rounded-full border border-red-100 p-2 text-red-500" onClick={() => removeItem(item.product.id)}>
                     <Trash2 className="h-4 w-4" />

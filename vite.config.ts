@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: "prompt",
       includeAssets: ["favicon.svg", "robots.txt"],
       manifest: {
-        name: "nexaPDV",
-        short_name: "nexaPDV",
-        description: "Sistema de caixa, estoque e produtos para mercadinhos com foco offline-first.",
+        name: "0PDV",
+        short_name: "0PDV",
+        description: "Sistema de caixa, estoque e operacao de balcao para varejo de pequeno porte.",
         theme_color: "#0f766e",
         background_color: "#f5f3ea",
         display: "standalone",

@@ -1,6 +1,7 @@
 import { LockKeyhole, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { useAppState } from "../context/useAppState";
+import { BrandWordmark } from "../shared/components/BrandWordmark";
 
 export function LoginPage() {
   const { login, settings } = useAppState();
@@ -22,7 +23,7 @@ export function LoginPage() {
     <div className="min-h-screen bg-canvas px-4 py-10 text-ink">
       <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-[1.2fr_0.8fr]">
         <section className="rounded-[32px] border border-brand-100 bg-white/90 p-8 shadow-soft">
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-brand-700">nexaPDV</p>
+          <BrandWordmark size="lg" withTagline />
           <h1 className="mt-3 text-4xl font-bold text-brand-900">Acesso à operação</h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-600">
             Entre com o PIN do operador ou do gerente para acessar o caixa, o estoque e o catálogo com trilha de auditoria.

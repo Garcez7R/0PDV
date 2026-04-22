@@ -1,5 +1,6 @@
 export type PaymentMethod = "cash" | "debit" | "credit";
 export type UserRole = "operator" | "manager";
+export type ProductSaleMode = "unit" | "weight";
 
 export type AuthUser = {
   id: string;
@@ -23,6 +24,7 @@ export type Product = {
   name: string;
   description: string;
   barcode: string;
+  saleMode: ProductSaleMode;
   costPrice: number;
   salePrice: number;
   stockQty: number;
@@ -36,6 +38,7 @@ export type SaleItem = {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  saleMode: ProductSaleMode;
 };
 
 export type Sale = {

@@ -3,14 +3,15 @@ import { useMemo, useState, type FormEvent } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { SectionCard } from "../components/SectionCard";
 import { useAppState } from "../context/useAppState";
-import type { Product } from "../lib/types";
-import { formatCurrency } from "../lib/utils";
+import type { Product, ProductSaleMode } from "../lib/types";
+import { formatCurrency, formatQuantity } from "../lib/utils";
 
 type ProductFormState = {
   id?: string;
   name: string;
   description: string;
   barcode: string;
+  saleMode: ProductSaleMode;
   costPrice: string;
   salePrice: string;
   stockQty: string;
@@ -21,6 +22,7 @@ const emptyForm: ProductFormState = {
   name: "",
   description: "",
   barcode: "",
+  saleMode: "unit",
   costPrice: "",
   salePrice: "",
   stockQty: "",
@@ -33,6 +35,7 @@ function toFormState(product: Product): ProductFormState {
     name: product.name,
     description: product.description,
     barcode: product.barcode,
+    saleMode: product.saleMode,
     costPrice: String(product.costPrice),
     salePrice: String(product.salePrice),
     stockQty: String(product.stockQty),
@@ -47,6 +50,7 @@ export function ProdutosPage() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [form, setForm] = useState<ProductFormState>({
     ...emptyForm,
+    saleMode: "unit",
     minStockQty: String(settings.defaultMinStockQty)
   });
 
@@ -65,6 +69,7 @@ export function ProdutosPage() {
   function openForCreate() {
     setForm({
       ...emptyForm,
+      saleMode: "unit",
       minStockQty: String(settings.defaultMinStockQty)
     });
     setIsEditorOpen(true);
@@ -83,6 +88,7 @@ export function ProdutosPage() {
         name: form.name.trim(),
         description: form.description.trim(),
         barcode: form.barcode.trim(),
+        saleMode: form.saleMode,
         costPrice: Number(form.costPrice),
         salePrice: Number(form.salePrice),
         stockQty: Number(form.stockQty),
@@ -126,7 +132,11 @@ export function ProdutosPage() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
             />
-            <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-60" onClick={openForCreate} disabled={!isManager}>
+            <button
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={openForCreate}
+              disabled={!isManager}
+            >
               <PackagePlus className="h-4 w-4" />
               Novo produto
             </button>
@@ -142,18 +152,37 @@ export function ProdutosPage() {
                   </div>
                   <div className="flex flex-wrap gap-2 text-sm text-slate-600">
                     <span className="rounded-full bg-brand-50 px-3 py-2">Cod: {product.barcode}</span>
-                    <span className="rounded-full bg-brand-50 px-3 py-2">Custo: {formatCurrency(product.costPrice)}</span>
-                    <span className="rounded-full bg-brand-50 px-3 py-2">Venda: {formatCurrency(product.salePrice)}</span>
-                    <span className="rounded-full bg-brand-50 px-3 py-2">Estoque: {product.stockQty}</span>
+                    <span className="rounded-full bg-brand-50 px-3 py-2">
+                      {product.saleMode === "weight" ? "Por peso" : "Por unidade"}
+                    </span>
+                    <span className="rounded-full bg-brand-50 px-3 py-2">
+                      Custo: {formatCurrency(product.costPrice)}
+                      {product.saleMode === "weight" ? "/kg" : ""}
+                    </span>
+                    <span className="rounded-full bg-brand-50 px-3 py-2">
+                      Venda: {formatCurrency(product.salePrice)}
+                      {product.saleMode === "weight" ? "/kg" : ""}
+                    </span>
+                    <span className="rounded-full bg-brand-50 px-3 py-2">
+                      Estoque: {formatQuantity(product.stockQty, product.saleMode)}
+                    </span>
                   </div>
                 </div>
 
                 <div className="mt-4 flex gap-3">
-                  <button className="inline-flex items-center gap-2 rounded-2xl border border-brand-100 px-4 py-2 font-medium text-brand-900 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => openForEdit(product)} disabled={!isManager}>
+                  <button
+                    className="inline-flex items-center gap-2 rounded-2xl border border-brand-100 px-4 py-2 font-medium text-brand-900 disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => openForEdit(product)}
+                    disabled={!isManager}
+                  >
                     <Pencil className="h-4 w-4" />
                     Editar
                   </button>
-                  <button className="inline-flex items-center gap-2 rounded-2xl border border-red-100 px-4 py-2 font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-60" onClick={() => handleDelete(product.id)} disabled={!isManager}>
+                  <button
+                    className="inline-flex items-center gap-2 rounded-2xl border border-red-100 px-4 py-2 font-medium text-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={() => handleDelete(product.id)}
+                    disabled={!isManager}
+                  >
                     <Trash2 className="h-4 w-4" />
                     Excluir
                   </button>
@@ -185,6 +214,7 @@ export function ProdutosPage() {
               Apenas usuários com perfil de gerente podem cadastrar, editar ou excluir produtos.
             </div>
           ) : null}
+
           <form className="grid gap-4" onSubmit={handleSubmit}>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Nome
@@ -198,24 +228,36 @@ export function ProdutosPage() {
               Código de barras
               <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={form.barcode} onChange={(event) => setForm((current) => ({ ...current, barcode: event.target.value }))} required disabled={!isManager} />
             </label>
+            <label className="grid gap-2 text-sm font-medium text-slate-700">
+              Tipo de venda
+              <select className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" value={form.saleMode} onChange={(event) => setForm((current) => ({ ...current, saleMode: event.target.value as ProductSaleMode }))} disabled={!isManager}>
+                <option value="unit">Por unidade</option>
+                <option value="weight">Por peso (kg)</option>
+              </select>
+            </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-2 text-sm font-medium text-slate-700">
-                Preço de custo
+                Preço de custo {form.saleMode === "weight" ? "(por kg)" : "(por unidade)"}
                 <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="0.01" value={form.costPrice} onChange={(event) => setForm((current) => ({ ...current, costPrice: event.target.value }))} required disabled={!isManager} />
               </label>
               <label className="grid gap-2 text-sm font-medium text-slate-700">
-                Preço de venda
+                Preço de venda {form.saleMode === "weight" ? "(por kg)" : "(por unidade)"}
                 <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="0.01" value={form.salePrice} onChange={(event) => setForm((current) => ({ ...current, salePrice: event.target.value }))} required disabled={!isManager} />
               </label>
               <label className="grid gap-2 text-sm font-medium text-slate-700">
-                Estoque atual
-                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="1" value={form.stockQty} onChange={(event) => setForm((current) => ({ ...current, stockQty: event.target.value }))} required disabled={!isManager} />
+                Estoque atual {form.saleMode === "weight" ? "(kg)" : "(unidades)"}
+                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step={form.saleMode === "weight" ? "0.001" : "1"} value={form.stockQty} onChange={(event) => setForm((current) => ({ ...current, stockQty: event.target.value }))} required disabled={!isManager} />
               </label>
               <label className="grid gap-2 text-sm font-medium text-slate-700">
-                Estoque mínimo
-                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step="1" value={form.minStockQty} onChange={(event) => setForm((current) => ({ ...current, minStockQty: event.target.value }))} required disabled={!isManager} />
+                Estoque mínimo {form.saleMode === "weight" ? "(kg)" : "(unidades)"}
+                <input className="rounded-2xl border border-brand-100 bg-canvas px-4 py-3" type="number" min="0" step={form.saleMode === "weight" ? "0.001" : "1"} value={form.minStockQty} onChange={(event) => setForm((current) => ({ ...current, minStockQty: event.target.value }))} required disabled={!isManager} />
               </label>
             </div>
+            {form.saleMode === "weight" ? (
+              <div className="rounded-2xl bg-canvas p-4 text-sm text-slate-600">
+                Para itens a granel, informe preço e estoque em quilogramas. Exemplo: um queijo com 135 g deve ser lançado como <strong className="text-brand-900">0,135 kg</strong>.
+              </div>
+            ) : null}
             <button className="rounded-2xl bg-accent px-4 py-3 font-semibold text-brand-900 disabled:cursor-not-allowed disabled:opacity-60" type="submit" disabled={!isManager}>
               {form.id ? "Salvar alterações" : "Cadastrar produto"}
             </button>

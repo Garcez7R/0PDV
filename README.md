@@ -1,10 +1,10 @@
-# nexaPDV
+# 0PDV
 
 Sistema de caixa, estoque e catálogo para mercadinhos de bairro, desenvolvido como PWA offline-first com foco em operação rápida, persistência local e sincronização posterior com Cloudflare.
 
 ## Visão Geral
 
-O `nexaPDV` foi pensado para cenários de operação real em pequenos comércios:
+O `0PDV` foi pensado para cenários de operação real em pequenos comércios:
 
 - frente de caixa rápida para desktop, tablet e celular
 - cadastro e manutenção de produtos

@@ -7,7 +7,7 @@ const DB_VERSION = 1;
 
 const defaultSettings: AppSettings = {
   id: "app-settings",
-  storeName: "Mercadinho Nexa",
+  storeName: "0PDV",
   defaultMinStockQty: 5,
   lastSyncAt: null,
   operatorName: "Operador",
@@ -16,7 +16,7 @@ const defaultSettings: AppSettings = {
   managerPin: "4321"
 };
 
-interface NexaDatabase extends DBSchema {
+interface ZeroPdvDatabase extends DBSchema {
   products: {
     key: string;
     value: Product;
@@ -43,7 +43,7 @@ interface NexaDatabase extends DBSchema {
   };
 }
 
-const dbPromise = openDB<NexaDatabase>(DB_NAME, DB_VERSION, {
+const dbPromise = openDB<ZeroPdvDatabase>(DB_NAME, DB_VERSION, {
   upgrade(db) {
     db.createObjectStore("products", { keyPath: "id" });
     db.createObjectStore("sales", { keyPath: "id" });
