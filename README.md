@@ -1,4 +1,4 @@
-# 0PDV
+# ØPDV
 
 Sistema de frente de caixa, estoque e operação comercial para pequeno varejo, desenhado para funcionar bem em balcão, tablet e celular, com foco em agilidade operacional, resiliência offline e evolução para sincronização em nuvem.
 
